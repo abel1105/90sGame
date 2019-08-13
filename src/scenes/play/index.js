@@ -11,19 +11,20 @@ const Play = new Phaser.Class({
     this.superTimeout = null;
     this.startTime = null;
     this.nowTime = null;
+    this.level = 1;
     // bg
     this.bgCenter = this.add.tileSprite(400, 350, 800, 700, 'bgCenter').setTileScale(1 / 3);
     this.bgBottom = this.add.image(400, 680, 'bgBottom').setScale(1 / 3);
     // balls
     this.balls = this.physics.add.group();
     this.balls.createMultiple({
-      frameQuantity: 10,
+      frameQuantity: 100,
       key: ['ball1', 'ball2', 'ball3', 'ball4', 'ball5'],
       randomKey: true,
       randomFrame: true,
       setScale: { x: 1/3, y: 1/3 },
       active: false,
-      visible: false
+      visible: false,
     });
     // duck
     this.duck = this.physics.add
@@ -48,7 +49,7 @@ const Play = new Phaser.Class({
     // starts
     this.stars = this.physics.add.group();
     this.stars.createMultiple({
-      frameQuantity: 10,
+      frameQuantity: 100,
       key: 'superStar',
       setScale: { x: 1/3, y: 1/3 },
       active: false,
@@ -85,10 +86,12 @@ const Play = new Phaser.Class({
 
     if(remainTime === 60 && !this.boss1) {
       this.hasShowSomething = true;
+      this.level += 1;
       this.showLittleBoss();
     }
     if(remainTime === 30 && !this.boss2) {
       this.hasShowSomething = true;
+      this.level += 0.5;
       this.showBigBoss();
     }
 
@@ -101,29 +104,29 @@ const Play = new Phaser.Class({
     // move left and right
     const cursors = this.input.keyboard.createCursorKeys();
     if (cursors.left.isDown) {
-      this.duck.setVelocityX(-200);
+      this.duck.setVelocityX(-200 * this.level);
     } else if (cursors.right.isDown) {
-      this.duck.setVelocityX(200);
+      this.duck.setVelocityX(200  * this.level);
     } else {
       this.duck.setVelocityX(0);
     }
     // tile background
-    this.bgCenter.tilePositionY -= this.superTimeout ? 10 : 2;
+    this.bgCenter.tilePositionY -= this.superTimeout ? 10 * this.level : 2 * this.level;
     if (this.bgBottom.y < 750) this.bgBottom.y += 2;
 
     // balls
-    if (this.nextBallsAt < this.time.now && !this.hasShowSomething) {
-      this.nextBallsAt = this.time.now += 2500;
+    if (this.nextBallsAt < this.nowTime && !this.hasShowSomething) {
+      this.nextBallsAt = this.nowTime + (2500 / this.level);
       const showSuperStar = Phaser.Math.RND.between(0, 10) > 8;
       const target = showSuperStar ? this.stars : this.balls;
       target.getFirstDead()
         .setActive(true)
         .setVisible(true)
         .setPosition(Phaser.Math.RND.pick([180, 280, 380, 480, 580]), -20)
-        .setVelocityY(100)
+        .setVelocityY(100 * this.level)
         .setImmovable()
     } else if (this.hasShowSomething) {
-      this.nextBallsAt = this.time.now += 5000;
+      this.nextBallsAt = this.time.now + (5000 / this.level);
     }
 
   },
@@ -168,7 +171,7 @@ const Play = new Phaser.Class({
     // boss 1
     this.boss1 = this.physics.add.image(Phaser.Math.RND.pick([280, 380]), -200, 'boss1')
       .setScale(1/2)
-      .setVelocityY(100)
+      .setVelocityY(100 * this.level)
       .setImmovable();
     this.physics.add.collider(this.duck, this.boss1, this.hitEnemy, null, this);
   },
@@ -176,7 +179,7 @@ const Play = new Phaser.Class({
     // boss 2
     this.boss2 = this.physics.add.image(Phaser.Math.RND.pick([300, 500]), -200, 'boss2')
       .setScale(1/3)
-      .setVelocityY(100)
+      .setVelocityY(100 * this.level)
       .setImmovable();
     this.physics.add.collider(this.duck, this.boss2, this.hitEnemy, null, this);
   },
